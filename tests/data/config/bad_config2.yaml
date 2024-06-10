@@ -1,0 +1,5 @@
+device_type: T4
+connection_type: USB
+sensor_name: labjack_test_1
+channel_name: DIO1
+location: somewhere

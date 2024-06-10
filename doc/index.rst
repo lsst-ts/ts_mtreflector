@@ -2,16 +2,16 @@
 
 .. _lsst.ts.reflector:
 
-#################
+####################
 lsst.ts.reflector
-#################
+####################
 
 .. Paragraph that describes what this Python module does and links to related modules and frameworks.
 
 .. .. _lsst.ts.reflector-using:
 
 .. Using lsst.ts.reflector
-.. =======================
+.. ==========================
 
 .. toctree linking to topics related to using the module's APIs.
 
