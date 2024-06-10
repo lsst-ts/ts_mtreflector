@@ -93,7 +93,10 @@ class ReflectorCsc(salobj.ConfigurableCsc):
     @property
     def controller_connected(self) -> bool:
         """Return True if the LabJack is connected"""
-        return self.reflector_controller is not None and self.reflector_controller.connected
+        return (
+            self.reflector_controller is not None
+            and self.reflector_controller.connected
+        )
 
     async def configure(self, config: Any) -> None:
         """Configure the CSC"""
@@ -148,7 +151,9 @@ class ReflectorCsc(salobj.ConfigurableCsc):
         # if self.controller_connected:
         #     await self.disconnect_reflector()
         if self.reflector_controller is None:
-            raise RuntimeError("CSC Tried to use reflector controller without a valid object")
+            raise RuntimeError(
+                "CSC Tried to use reflector controller without a valid object"
+            )
 
         async with asyncio.timeout(COMMUNICATION_TIMEOUT):
             await self.reflector_controller.connect()

@@ -74,7 +74,7 @@ class DataClientTestCase(unittest.IsolatedAsyncioTestCase):
         assert reflector_client.simulation_mode == 1
         assert isinstance(reflector_client.log, logging.Logger)
 
-        assert config.channel_name == "DIO1" 
+        assert config.channel_name == "DIO1"
 
     async def test_state_change(self) -> None:
         config = self.get_config("config.yaml")
@@ -149,9 +149,7 @@ class DataClientTestCase(unittest.IsolatedAsyncioTestCase):
 
         for chan in bad_channels:
             with self.assertRaises(TypeError):
-                reflector.reflector.LabjackChannel(
-                    serial_number="ASDF", channel=chan
-                )
+                reflector.reflector.LabjackChannel(serial_number="ASDF", channel=chan)
 
     def get_config(self, filename: PathT) -> types.SimpleNamespace:
         """Get a config dict from tests/data.

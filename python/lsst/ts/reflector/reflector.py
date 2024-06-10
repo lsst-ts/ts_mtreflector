@@ -98,7 +98,13 @@ class LabjackChannel:
             addNum += self.offset_dict[self.channel[:3]]
         return addNum
 
-    def check_valid(self, value: Union[ReflectorState, bool,]) -> bool:
+    def check_valid(
+        self,
+        value: Union[
+            ReflectorState,
+            bool,
+        ],
+    ) -> bool:
         """Wrapper to if value written is valid for labjack channel
 
         Parameters
@@ -168,7 +174,6 @@ class ReflectorController(BaseLabJackDataClient):
             else logging.getLogger(type(self).__name__)
         )
 
-
         self.channel_name = self.config.channel_name
         self.labjack_item = LabjackChannel(channel=self.channel_name, status=status)
 
@@ -182,7 +187,7 @@ class ReflectorController(BaseLabJackDataClient):
     @classmethod
     def get_config_schema(cls) -> dict[str, Any]:
         return yaml.safe_load(
-             """
+            """
 schema: http://json-schema.org/draft-07/schema#
 title: Reflector v1
 description: Schema for Reflector
@@ -273,7 +278,8 @@ additionalProperties: false
         self.labjack_item.status = status
 
     async def actuate_reflector(
-        self, actuate : Union[bool, ReflectorState],
+        self,
+        actuate: Union[bool, ReflectorState],
     ) -> None:
         """Run a blocking function in a thread pool executor.
 
@@ -294,7 +300,7 @@ additionalProperties: false
         """
         if self.labjack_item.status == actuate:
             self.log.warning(f"Reflector is already of status: {actuate}")
-        
+
         loop = asyncio.get_running_loop()
         try:
             return await asyncio.wait_for(
@@ -319,7 +325,8 @@ additionalProperties: false
             raise
 
     def _blocking_actuate_reflector(
-        self, actuate : Union[bool, ReflectorState],
+        self,
+        actuate: Union[bool, ReflectorState],
     ) -> None:
         """Tell labjack to actuate reflector.
 

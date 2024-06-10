@@ -68,9 +68,7 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
             )
 
     async def test_bin_script(self) -> None:
-        await self.check_bin_script(
-            name="reflector", index=0, exe_name="run_reflector"
-        )
+        await self.check_bin_script(name="reflector", index=0, exe_name="run_reflector")
 
     async def test_switch_reflector(self) -> None:
         async with self.make_csc(
@@ -78,18 +76,14 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
             config_dir=TEST_CONFIG_DIR,
             simulation_mode=1,
         ):
-            await self.remote.cmd_switchOn.set_start(
-                timeout=SHORT_TIMEOUT
-            )
+            await self.remote.cmd_switchOn.set_start(timeout=SHORT_TIMEOUT)
 
             await self.assert_next_sample(
                 topic=self.remote.evt_reflectorState,
                 reflectorState=ReflectorState.ON,
             )
 
-            await self.remote.cmd_switchOff.set_start(
-                timeout=SHORT_TIMEOUT
-            )
+            await self.remote.cmd_switchOff.set_start(timeout=SHORT_TIMEOUT)
 
             await self.assert_next_sample(
                 topic=self.remote.evt_reflectorState,
