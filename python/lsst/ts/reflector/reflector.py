@@ -19,7 +19,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-__all__ = ["reflector"]
+__all__ = ["LabjackChannel", "ReflectorController"]
 import asyncio
 import functools
 import logging
@@ -125,7 +125,8 @@ class LabjackChannel:
         return False
 
     def value(self, state_to_write: ReflectorState) -> bool:
-        """Wrapper to convert ON/OFF to the actual value to write in case of flipped GPIOs
+        """Wrapper to convert ON/OFF to the actual value to
+            write in case of flipped GPIOs
 
         Parameters
         ----------
@@ -137,7 +138,7 @@ class LabjackChannel:
         state : `bool`
             Proper True/False to send to labjack
         """
-        if state_to_write == ReflectorState.ON or state_to_write == True:
+        if state_to_write == ReflectorState.ON or state_to_write is True:
             return True
         else:
             return False

@@ -23,7 +23,7 @@ __all__ = ["ReflectorCsc", "run_reflector"]
 
 import asyncio
 import types
-from typing import Any, List, Union
+from typing import Any
 
 from lsst.ts import salobj
 from lsst.ts.xml.enums.Reflector import ReflectorState
