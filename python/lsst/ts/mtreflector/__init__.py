@@ -24,5 +24,5 @@ try:
 except ModuleNotFoundError:
     __version__ = "?"
 
-from .mt_reflector import *
-from .mt_reflector_csc import *
+from .controller import *
+from .csc import *

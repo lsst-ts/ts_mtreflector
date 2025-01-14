@@ -11,6 +11,7 @@ config.log
 *egg
 *egg-info
 ospl-info.log
+ospl-*.log
 
 # Built by sconsUtils
 version.py
