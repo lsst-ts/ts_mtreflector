@@ -1,2 +1,2 @@
 @Library('JenkinsShared')_
-CondaPipeline([], "ts-mtreflector", "lsst.ts.mtreflector", "noarch")
+CondaPipeline(["ts_config_mtcalsys"], "ts-mtreflector", "lsst.ts.mtreflector", "noarch")
