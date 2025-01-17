@@ -1,0 +1,8 @@
+device_type: T4
+identifier: test.foo.bar
+bogus_entry: asdf
+topics:
+  - topic_name: reflector_item
+    sensor_name: labjack_test_1
+    channel_name: DIO1
+    location: somewhere

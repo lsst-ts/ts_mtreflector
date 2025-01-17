@@ -1,0 +1,1 @@
+Simplified handle_summary_state in csc.py.

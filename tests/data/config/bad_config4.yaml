@@ -1,0 +1,7 @@
+device_type: T4
+connection_type: USB
+identifier: test.foo.bar
+topics:
+  - topic_name: reflector_item
+    sensor_name: labjack_test_1
+    location: somewhere
