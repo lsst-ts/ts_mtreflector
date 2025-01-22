@@ -24,5 +24,6 @@ try:
 except ModuleNotFoundError:
     __version__ = "?"
 
+from .config_schema import *
 from .controller import *
 from .csc import *

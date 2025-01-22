@@ -16,11 +16,7 @@ test:
   requires:
     - ts-conda-build =0.4
     - ts-xml {{ xml_version }}
-    - ts-utils
     - ts-salobj {{ salobj_version }}
-    - labjack-ljm
-    - ts-ess-common
-    - ts-ess-labjack
   source_files:
     - pyproject.toml
     - python
@@ -43,6 +39,4 @@ requirements:
     - python {{ python }}
     - ts-xml
     - ts-salobj
-    - ts-utils
-    - ts-ess-common
-    - ts-ess-labjack
+    - labjack-ljm =1.21

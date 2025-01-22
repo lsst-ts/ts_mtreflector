@@ -23,18 +23,17 @@ __all__ = ["MTReflectorCsc", "run_mtreflector"]
 
 import asyncio
 import types
-from typing import Any
 
 from lsst.ts import salobj
 from lsst.ts.xml.enums.MTReflector import MTReflectorStatus
 
 from . import __version__
 from .config_schema import CONFIG_SCHEMA
-from .controller import COMMUNICATION_TIMEOUT, MTReflectorController
+from .controller import COMMUNICATION_TIMEOUT, Controller
 
 
 class MTReflectorCsc(salobj.ConfigurableCsc):
-    """MTReflector controller
+    """Implement MTReflector CSC.
 
     Parameters
     ----------
@@ -48,17 +47,21 @@ class MTReflectorCsc(salobj.ConfigurableCsc):
     override : `str`, optional
         Configuration override file to apply if ``initial_state`` is
         `State.DISABLED` or `State.ENABLED`.
-    simulation_mode : `bool`, optional
+    simulation_mode : `int`, optional
         Simulation mode; one of:
 
-        * False for normal operation
-        * True for simulation
+        * 0 for normal operation
+        * 1 for simulation
 
     Attributes
     ----------
-    mtreflector_controller : `MTReflectorController`
+    controller : `Controller`
         The controller representing the labjack controller
         which is controlling the reflector.
+    should_be_connected : `bool`
+        Should the controller be connected?
+    config : `None` or `types.SimpleNamespace`
+        Config object.
     """
 
     version = __version__
@@ -69,12 +72,12 @@ class MTReflectorCsc(salobj.ConfigurableCsc):
         config_dir: None | str = None,
         initial_state: salobj.State = salobj.State.STANDBY,
         override: str = "",
-        simulation_mode: bool = False,
+        simulation_mode: int = False,
     ) -> None:
-        self.reflector_controller = None
-        self.should_be_connected = False
+        self.controller: None | Controller = None
+        self.should_be_connected: bool = False
 
-        self.config = None
+        self.config: None | types.SimpleNamespace = None
 
         super().__init__(
             name="MTReflector",
@@ -88,38 +91,44 @@ class MTReflectorCsc(salobj.ConfigurableCsc):
 
     @staticmethod
     def get_config_pkg() -> str:
+        """Get configuration package name."""
         return "ts_config_mtcalsys"
 
     @property
-    def controller_connected(self) -> bool:
-        """Return True if the LabJack is connected"""
-        return (
-            self.reflector_controller is not None
-            and self.reflector_controller.connected
-        )
+    def connected(self) -> bool:
+        """Is the LabJack connected?"""
+        return self.controller is not None and self.controller.connected
 
-    async def configure(self, config: Any) -> None:
-        """Configure the CSC"""
+    async def configure(self, config: types.SimpleNamespace) -> None:
+        """Configure the CSC.
+
+        Parameters
+        ----------
+        config : `types.SimpleNameSpace`
+            The config object.
+        """
         self.config = config
 
     async def handle_summary_state(self) -> None:
-        """Override of the handle_summary_state function to
-        create reflector controller object when enabled
+        """Create connection to labjack when transitioning
+        to disabled state and destroy connection when transitioning
+        to standby state.
 
         Raises
         ------
         ValueError
-            If config is None
-            If reflector Controller should be connected but isn't
+            If config is None.
+            If reflector Controller should be connected but isn't.
         """
         if self.disabled_or_enabled:
-            if self.should_be_connected and not self.controller_connected:
+            if self.should_be_connected and not self.connected:
                 await self.fault(
                     code=MTReflectorStatus.CONNECTION_ERROR.value,
                     report="reflector controller should be connected but isn't.",
                 )
                 return
-            if not self.controller_connected:
+            if not self.connected:
+
                 if self.config is None:
                     msg = (
                         "Tried to create MTReflectorController without a configuration. "
@@ -129,100 +138,107 @@ class MTReflectorCsc(salobj.ConfigurableCsc):
                     )
                     await self.fault(code=1, report=msg)
                     return
-                self.reflector_controller = MTReflectorController(
+                self.controller = Controller(
                     config=self.config,
                     log=self.log,
-                    simulate=self.simulation_mode,
+                    simulation_mode=self.simulation_mode,
                 )
-                await self.connect()
+                try:
+                    await self.connect()
+                except Exception:
+                    await self.fault(code=2, report="Failed to connect.")
+                    return
         else:
             await self.disconnect()
 
     async def connect(self) -> None:
         """Connect to the LabJack and get status.
-        This method initiates the MTReflectorController as well
+
+        This method initiates the MTReflectorController as well.
 
         Raises
         ------
         RuntimeError
-            If there is no MTReflectorController object
+            If there is no MTReflectorController object.
         asyncio.TimeoutError
-            If it takes longer than self.config.reflector.connect_timeout
+            If it takes longer than self.config.reflector.connect_timeout.
         """
-        if self.reflector_controller is None:
-            raise RuntimeError(
-                "CSC Tried to use reflector controller without a valid object"
-            )
+        if self.controller is None:
+            raise RuntimeError("Reflector controller is None.")
 
         async with asyncio.timeout(COMMUNICATION_TIMEOUT):
-            await self.reflector_controller.connect()
+            await self.controller.connect()
         self.should_be_connected = True
 
     async def disconnect(self) -> None:
-        """Disconnect to the LabJack & delete the MTReflectorController object
+        """Disconnect from the labjack and reset the controller object.
 
         Raises
         ------
         Exception
-            If disconnect failed
+            If disconnect failed.
         """
         try:
-            if self.reflector_controller is None:
+            if self.controller is None:
                 return
-            await self.reflector_controller.disconnect()
+            await self.controller.disconnect()
         except Exception as e:
             self.log.warning(f"Failed to disconnect reflector; continuing: {e!r}")
         finally:
-            self.reflector_controller = None
+            self.controller = None
             self.should_be_connected = False
 
     async def close_tasks(self) -> None:
         """Close the CSC gracefully.
 
         Disconnects the labjack, deletes MTReflectorController object
-        Then closes tasks.
+        and closes tasks.
 
         """
         await self.disconnect()
         await super().close_tasks()
 
     async def do_open(self, data: types.SimpleNamespace) -> None:
-        """Switch open reflector.
+        """Open reflector.
 
         Parameters
         ----------
-        data : salobj.BaseMsgType
-            Unused
+        data : `lsst.ts.salobj.BaseMsgType`
+            Unused.
         """
         self.assert_enabled()
-        if self.reflector_controller is None:
+        if self.controller is None:
             raise salobj.ExpectedError("Labjack not connected")
-        await self.reflector_controller.actuate_mtreflector(
-            actuate=MTReflectorStatus.OPEN
-        )
+        try:
+            await self.controller.actuate(value=1.0)
+        except Exception:
+            await self.fault(code=3, report="Open failed.")
+            return
 
         await self.evt_reflectorStatus.set_write(
-            reflectorStatus=self.reflector_controller.labjack_item.status,
+            reflectorStatus=self.controller.state,
         )
 
     async def do_close(self, data: types.SimpleNamespace) -> None:
-        """Switch close reflector.
+        """Close reflector.
 
         Parameters
         ----------
-        data : salobj.BaseMsgType
-            Unused
+        data : `lsst.ts.salobj.BaseMsgType`
+            Unused.
         """
         self.assert_enabled()
-        if self.reflector_controller is None:
+        if self.controller is None:
             raise salobj.ExpectedError("Labjack not connected")
 
-        await self.reflector_controller.actuate_mtreflector(
-            actuate=MTReflectorStatus.CLOSE
-        )
+        try:
+            await self.controller.actuate(value=0.0)
+        except Exception:
+            await self.fault(code=4, report="Close failed.")
+            return
 
         await self.evt_reflectorStatus.set_write(
-            reflectorStatus=self.reflector_controller.labjack_item.status,
+            reflectorStatus=self.controller.state,
         )
 
 
