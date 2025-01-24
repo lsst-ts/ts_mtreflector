@@ -1,7 +1,5 @@
-############
-ts_reflector
-############
+###############
+ts_mtreflector
+###############
 
-
-
-.. Add a brief (few sentence) description of what this package provides.
+This CSC is used to connect to a labjack and operate the reflector
