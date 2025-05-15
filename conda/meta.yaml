@@ -40,3 +40,4 @@ requirements:
     - ts-xml
     - ts-salobj
     - labjack-ljm =1.21
+    - libusb
