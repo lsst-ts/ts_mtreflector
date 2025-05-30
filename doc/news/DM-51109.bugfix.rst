@@ -1,0 +1,1 @@
+Published ReflectorStatus when connected, disconnected and unknown.

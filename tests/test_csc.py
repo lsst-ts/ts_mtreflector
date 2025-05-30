@@ -82,6 +82,21 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
 
             await self.assert_next_sample(
                 topic=self.remote.evt_reflectorStatus,
+                reflectorStatus=MTReflectorStatus.UNKNOWN
+            )
+
+            await self.assert_next_sample(
+                topic=self.remote.evt_reflectorStatus,
+                reflectorStatus=MTReflectorStatus.DISCONNECTED
+            )
+
+            await self.assert_next_sample(
+                topic=self.remote.evt_reflectorStatus,
+                reflectorStatus=MTReflectorStatus.CONNECTED
+            )
+
+            await self.assert_next_sample(
+                topic=self.remote.evt_reflectorStatus,
                 reflectorStatus=MTReflectorStatus.OPEN,
             )
 

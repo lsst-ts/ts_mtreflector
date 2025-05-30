@@ -114,7 +114,6 @@ class Controller:
             return await self._loop.run_in_executor(None, partial)
         except Exception:
             self.log.exception("Command failed.")
-            return RuntimeError("Command failed.")
 
     @property
     def connected(self) -> bool:

@@ -149,6 +149,8 @@ class MTReflectorCsc(salobj.ConfigurableCsc):
                     await self.fault(code=2, report="Failed to connect.")
                     return
         else:
+            if self.controller is None:
+                await self.evt_reflectorStatus.set_write(reflectorStatus=MTReflectorStatus.UNKNOWN)
             await self.disconnect()
 
     async def connect(self) -> None:
@@ -169,6 +171,7 @@ class MTReflectorCsc(salobj.ConfigurableCsc):
         async with asyncio.timeout(COMMUNICATION_TIMEOUT):
             await self.controller.connect()
         self.should_be_connected = True
+        await self.evt_reflectorStatus.set_write(reflectorStatus=MTReflectorStatus.CONNECTED)
 
     async def disconnect(self) -> None:
         """Disconnect from the labjack and reset the controller object.
@@ -187,6 +190,7 @@ class MTReflectorCsc(salobj.ConfigurableCsc):
         finally:
             self.controller = None
             self.should_be_connected = False
+            await self.evt_reflectorStatus.set_write(reflectorStatus=MTReflectorStatus.DISCONNECTED)
 
     async def close_tasks(self) -> None:
         """Close the CSC gracefully.
