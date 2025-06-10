@@ -231,9 +231,9 @@ class Controller:
         current_close_value = await self.read_channel(name=self.close_channel_name)
         self.log.debug(f"Open: {current_open_value=}")
         self.log.debug(f"Close: {current_close_value=}")
-        if int(current_open_value) and not int(current_close_value):
+        if current_open_value and not current_close_value:
             self.state = MTReflectorStatus.OPEN
-        elif int(current_close_value) and not int(current_open_value):
+        elif current_close_value and not current_open_value:
             self.state = MTReflectorStatus.CLOSE
         else:
             raise RuntimeError("State of Reflector is Unknown.")
