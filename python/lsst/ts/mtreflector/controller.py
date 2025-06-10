@@ -88,6 +88,9 @@ class Controller:
         self.fake_value: None | float = None
         self._loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
 
+        self.open_channel_name = 'CIO0'
+        self.close_channel_name = 'CIO1'
+
     async def run(self, func: Callable, **kwargs: Any) -> Any:
         """Run the command.
 
@@ -209,20 +212,29 @@ class Controller:
         value : `float` or `int`
             Open/close the reflector.
         """
-        self.log.debug(f"{value=}")
-        name = "DIO1"
-        current_value = await self.read_channel(name=name)
-        self.log.debug(f"{current_value=}")
-        match current_value:
+        self.log.debug(f"Open/close value: {value=}")
+        current_open_value = await self.read_channel(name=self.open_channel_name)
+        current_close_value = await self.read_channel(name=self.close_channel_name)
+        self.log.debug(f"Open: {current_open_value=}")
+        self.log.debug(f"Close: {current_close_value=}")
+        self.log.info("Starting MTReflector Actuation")
+        match int(value):
             case 1:
+                await self.write_channel(name=self.close_channel_name, value=0.0)
+                await self.write_channel(name=self.open_channel_name, value=1.0)
                 self.state = MTReflectorStatus.OPEN
             case 0:
+                await self.write_channel(name=self.close_channel_name, value=1.0)
+                await self.write_channel(name=self.open_channel_name, value=0.0)
                 self.state = MTReflectorStatus.CLOSE
-        await self.write_channel(name=name, value=value)
-        current_value = await self.read_channel(name=name)
-        self.log.debug(f"{current_value=}")
-        match current_value:
-            case 1:
-                self.state = MTReflectorStatus.OPEN
-            case 0:
-                self.state = MTReflectorStatus.CLOSE
+        
+        current_open_value = await self.read_channel(name=self.open_channel_name)
+        current_close_value = await self.read_channel(name=self.close_channel_name)
+        self.log.debug(f"Open: {current_open_value=}")
+        self.log.debug(f"Close: {current_close_value=}")
+        if current_open_value & not current_close_value:
+            self.state = MTReflectorStatus.OPEN
+        elif current_close_value & not current_open_value:
+            self.state = MTReflectorStatus.CLOSE
+        else:
+            raise RuntimeError("State of Reflector is Unknown.")
