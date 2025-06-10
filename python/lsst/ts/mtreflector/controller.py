@@ -218,7 +218,7 @@ class Controller:
         self.log.debug(f"Open: {current_open_value=}")
         self.log.debug(f"Close: {current_close_value=}")
         self.log.info("Starting MTReflector Actuation")
-        match int(value):
+        match value:
             case 1:
                 await self.write_channel(name=self.close_channel_name, value=0.0)
                 await self.write_channel(name=self.open_channel_name, value=1.0)
