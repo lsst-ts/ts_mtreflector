@@ -21,6 +21,7 @@
 
 __all__ = ["Controller"]
 import asyncio
+from enum import IntEnum
 import functools
 import logging
 import types
@@ -35,6 +36,9 @@ COMMUNICATION_TIMEOUT = 5
 # Sleep time before trying to reconnect (seconds).
 RECONNECT_WAIT = 60
 
+class CIOStates(IntEnum):
+    CLOSED = 14
+    OPEN = 13
 
 class Controller:
     """Implement MTReflector controller.
@@ -81,6 +85,8 @@ class Controller:
         self.connection_type: int = ljm.constants.ctTCP
         self.identifier: None | str = None
         self.simulation_mode: int = simulation_mode
+        if self.simulation_mode == 1:
+            self.identifier = ljm.constants.DEMO_MODE
         self.log: logging.Logger = (
             log if log is not None else logging.getLogger(__name__)
         )
@@ -169,15 +175,10 @@ class Controller:
         RuntimeError
             When the labjack handle is None.
         """
-        if not self.simulation_mode:
-            if self.handle is not None:
-                return await self.run(ljm.eReadName, handle=self.handle, name=name)
-            else:
-                raise RuntimeError("Labjack is not connected.")
+        if self.handle is not None:
+            return await self.run(ljm.eReadName, handle=self.handle, name=name)
         else:
-            if self.fake_value is None:
-                self.fake_value = 0.0
-            return self.fake_value
+            raise RuntimeError("Labjack is not connected.")
 
     async def write_channel(self, name: str, value: float | int) -> None:
         """Write the channel.
@@ -194,15 +195,12 @@ class Controller:
         RuntimeError
             When the labjack handle is None.
         """
-        if not self.simulation_mode:
-            if self.handle is not None:
-                return await self.run(
-                    ljm.eWriteName, handle=self.handle, name=name, value=value
-                )
-            else:
-                raise RuntimeError("Labjack is not connected.")
+        if self.handle is not None:
+            return await self.run(
+                ljm.eWriteName, handle=self.handle, name=name, value=value
+            )
         else:
-            self.fake_value = float(value)
+            raise RuntimeError("Labjack is not connected.")
 
     async def actuate(self, value: float | int) -> None:
         """Actuate the reflector screen.
@@ -212,28 +210,23 @@ class Controller:
         value : `float` or `int`
             Open/close the reflector.
         """
-        self.log.debug(f"Open/close value: {value=}")
-        current_open_value = await self.read_channel(name=self.open_channel_name)
-        current_close_value = await self.read_channel(name=self.close_channel_name)
-        self.log.debug(f"Open: {current_open_value=}")
-        self.log.debug(f"Close: {current_close_value=}")
-        self.log.info("Starting MTReflector Actuation")
+        begin_cio_state = await self.read_channel("CIO_STATE")
+        self.log.info(f"{begin_cio_state=}")
         match value:
             case 1:
                 await self.write_channel(name=self.close_channel_name, value=0.0)
                 await self.write_channel(name=self.open_channel_name, value=1.0)
-                self.state = MTReflectorStatus.OPEN
             case 0:
                 await self.write_channel(name=self.close_channel_name, value=1.0)
                 await self.write_channel(name=self.open_channel_name, value=0.0)
+        end_cio_state = await self.read_channel("CIO_STATE")
+        if self.simulation_mode:
+            end_cio_state = CIOStates.OPEN if value == 1 else CIOStates.CLOSED
+        self.log.info(f"{begin_cio_state=}{end_cio_state=}")
+        match end_cio_state:
+            case CIOStates.OPEN:
+                self.state = MTReflectorStatus.OPEN
+            case CIOStates.CLOSED:
                 self.state = MTReflectorStatus.CLOSE
-        current_open_value = await self.read_channel(name=self.open_channel_name)
-        current_close_value = await self.read_channel(name=self.close_channel_name)
-        self.log.debug(f"Open: {current_open_value=}")
-        self.log.debug(f"Close: {current_close_value=}")
-        if current_open_value and not current_close_value:
-            self.state = MTReflectorStatus.OPEN
-        elif current_close_value and not current_open_value:
-            self.state = MTReflectorStatus.CLOSE
-        else:
-            raise RuntimeError("State of Reflector is Unknown.")
+            case _:
+                raise RuntimeError("Reflector is in unknown state.")
