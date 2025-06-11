@@ -216,6 +216,7 @@ class MTReflectorCsc(salobj.ConfigurableCsc):
         try:
             await self.controller.actuate(value=1.0)
         except Exception:
+            self.log.exception("Open failed.")
             await self.fault(code=3, report="Open failed.")
             return
 
