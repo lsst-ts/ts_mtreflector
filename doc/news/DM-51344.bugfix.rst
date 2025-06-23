@@ -1,1 +1,0 @@
-Changed commanded channels to be CIO0 and CIO1 for open/close of reflector actuator.
