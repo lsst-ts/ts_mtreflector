@@ -36,9 +36,11 @@ COMMUNICATION_TIMEOUT = 5
 # Sleep time before trying to reconnect (seconds).
 RECONNECT_WAIT = 60
 
+
 class CIOStates(IntEnum):
     CLOSED = 14
     OPEN = 13
+
 
 class Controller:
     """Implement MTReflector controller.
@@ -87,15 +89,13 @@ class Controller:
         self.simulation_mode: int = simulation_mode
         if self.simulation_mode == 1:
             self.identifier = ljm.constants.DEMO_MODE
-        self.log: logging.Logger = (
-            log if log is not None else logging.getLogger(__name__)
-        )
+        self.log: logging.Logger = log if log is not None else logging.getLogger(__name__)
         self.config: types.SimpleNamespace = config
         self.fake_value: None | float = None
         self._loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
 
-        self.open_channel_name = 'CIO0'
-        self.close_channel_name = 'CIO1'
+        self.open_channel_name = "CIO0"
+        self.close_channel_name = "CIO1"
 
     async def run(self, func: Callable, **kwargs: Any) -> Any:
         """Run the command.
@@ -196,9 +196,7 @@ class Controller:
             When the labjack handle is None.
         """
         if self.handle is not None:
-            return await self.run(
-                ljm.eWriteName, handle=self.handle, name=name, value=value
-            )
+            return await self.run(ljm.eWriteName, handle=self.handle, name=name, value=value)
         else:
             raise RuntimeError("Labjack is not connected.")
 

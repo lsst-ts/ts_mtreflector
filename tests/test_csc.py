@@ -68,9 +68,7 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
             )
 
     async def test_bin_script(self) -> None:
-        await self.check_bin_script(
-            name="MTReflector", index=0, exe_name="run_mtreflector"
-        )
+        await self.check_bin_script(name="MTReflector", index=0, exe_name="run_mtreflector")
 
     async def test_switch_mtreflector(self) -> None:
         async with self.make_csc(
@@ -81,18 +79,15 @@ class CscTestCase(salobj.BaseCscTestCase, unittest.IsolatedAsyncioTestCase):
             await self.remote.cmd_open.set_start(timeout=SHORT_TIMEOUT)
 
             await self.assert_next_sample(
-                topic=self.remote.evt_reflectorStatus,
-                reflectorStatus=MTReflectorStatus.UNKNOWN
+                topic=self.remote.evt_reflectorStatus, reflectorStatus=MTReflectorStatus.UNKNOWN
             )
 
             await self.assert_next_sample(
-                topic=self.remote.evt_reflectorStatus,
-                reflectorStatus=MTReflectorStatus.DISCONNECTED
+                topic=self.remote.evt_reflectorStatus, reflectorStatus=MTReflectorStatus.DISCONNECTED
             )
 
             await self.assert_next_sample(
-                topic=self.remote.evt_reflectorStatus,
-                reflectorStatus=MTReflectorStatus.CONNECTED
+                topic=self.remote.evt_reflectorStatus, reflectorStatus=MTReflectorStatus.CONNECTED
             )
 
             await self.assert_next_sample(

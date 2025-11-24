@@ -128,7 +128,6 @@ class MTReflectorCsc(salobj.ConfigurableCsc):
                 )
                 return
             if not self.connected:
-
                 if self.config is None:
                     msg = (
                         "Tried to create MTReflectorController without a configuration. "
