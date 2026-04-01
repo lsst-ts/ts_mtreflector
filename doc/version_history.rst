@@ -8,6 +8,15 @@ Version History
 
 .. towncrier release notes start
 
+v0.1.4 (2026-01-22)
+===================
+
+Other Changes and Additions
+---------------------------
+
+- Added build string to conda recipe so that python version is included in package. (`OSW-1484 <https://rubinobs.atlassian.net//browse/OSW-1484>`_)
+
+
 v0.1.3 (2025-06-23)
 ===================
 
